@@ -1,5 +1,5 @@
 [![CI](https://github.com/mikeruk/calculator-service/actions/workflows/actions.yml/badge.svg?branch=master)](https://github.com/mikeruk/calculator-service/actions/workflows/actions.yml)
-# Rechner-Service
+# Kalkulator-Service
 
 Ein Spring Boot-Service zur Berechnung von Versicherungsprämien basierend auf Kilometerleistung, Fahrzeugtyp und Region.
 
