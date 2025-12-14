@@ -1,0 +1,61 @@
+= Calculator Service API
+:toc:
+:sectnums:
+
+== Overview
+
+This document describes the main endpoint and the core price calculation logic of the Calculator Service.
+
+== REST Endpoint
+
+The pricing API is exposed through `PriceControllerImpl`.
+It accepts a `PriceRequestDto`, validates the input, and delegates computation to the pricing service.
+
+=== Code: PriceControllerImpl
+
+[source,java]
+----
+include::../../main/java/insuranceservices/calculatorservice/controllers/tariffs/impl/PriceControllerImpl.java[]
+----
+
+=== Explanation
+
+* `@RestController` defines the class as a REST endpoint.
+* `POST /api/v1/price/calculate` is the main operation used by external clients.
+* The request body is validated using `@Valid`.
+* The controller does **no business logic** - it only forwards the request to `PriceCalculationService`.
+
+---
+
+== Price Calculation Service
+
+The core business logic lives inside `PriceCalculationServiceImpl`.
+It calculates the final insurance price based on:
+
+* kilometers: km factor (via `FactorService`)
+* vehicle type: vehicle factor (via `FactorService`)
+* postcode: region factor (via `FactorService`)
+
+=== Code: PriceCalculationServiceImpl
+
+[source,java]
+----
+include::../../main/java/insuranceservices/calculatorservice/services/impl/PriceCalculationServiceImpl.java[]
+----
+
+=== Explanation
+
+* `factorService.getKmFactor()` assigns a factor based on yearly kilometers.
+* `factorService.getVehicleTypeFactor()` assigns a factor depending on vehicle type.
+* `factorService.getRegionFactorForPostcode()` retrieves region factor using postcode.
+* Final price = `kmFactor * vehicleTypeFactor * regionFactor`.
+* A `PriceResponseDto` is returned with all intermediate factors included for transparency.
+
+---
+
+== Summary
+
+These two components form the core API flow:
+
+Client to **PriceController** to **PriceCalculationService** to 'Region lookup' to 'Final price' response.
+

@@ -1,0 +1,63 @@
+= Rechner-Service-API
+:toc:
+:sectnums:
+
+== Übersicht
+
+Dieses Dokument beschreibt den Hauptendpunkt und die zentrale Preisberechnungslogik des Rechner-Service.
+
+== REST-Endpunkt
+
+Die Preis-API wird über `PriceControllerImpl` bereitgestellt.
+Sie akzeptiert ein `PriceRequestDto`, validiert die Eingabe und delegiert die Berechnung an den Preis-Service.
+
+=== Code: PriceControllerImpl
+
+[source,java]
+----
+include::../../main/java/insuranceservices/calculatorservice/controllers/tariffs/impl/PriceControllerImpl.java[]
+----
+
+=== Erläuterung
+
+* `@RestController` definiert die Klasse als REST-Endpunkt.
+* `POST /api/v1/price/calculate` ist die Hauptoperation, die von externen Clients verwendet wird.
+* Der Request-Body wird mit `@Valid` validiert.
+* Der Controller führt **keine Geschäftslogik** aus – er leitet die Anfrage lediglich an `PriceCalculationService` weiter.
+
+---
+
+== Preisberechnungsdienst
+
+Die zentrale Geschäftslogik befindet sich in `PriceCalculationServiceImpl`.
+Er berechnet den endgültigen Versicherungspreis auf der Grundlage von:
+
+* Kilometern: km-Faktor (über `FactorService`)
+* Fahrzeugtyp: Fahrzeugfaktor (über `FactorService`)
+* Postleitzahl: Regionsfaktor (über `FactorService`)
+
+=== Code: PriceCalculationServiceImpl
+
+[source,java]
+----
+include::../../main/java/insuranceservices/calculatorservice/services/impl/PriceCalculationServiceImpl.java[]
+----
+
+=== Erläuterung
+
+* `factorService.getKmFactor()` weist einen Faktor basierend auf den jährlichen Kilometern zu.
+* `factorService.getVehicleTypeFactor()` weist einen Faktor abhängig vom Fahrzeugtyp zu.
+* `factorService.getRegionFactorForPostcode()` ruft den Regionsfaktor anhand der Postleitzahl ab.
+* Endpreis = `kmFactor * vehicleTypeFactor * regionFactor`.
+* Aus Gründen der Transparenz wird ein `PriceResponseDto` mit allen Zwischenfaktoren zurückgegeben.
+
+---
+
+== Zusammenfassung
+
+Diese beiden Komponenten bilden den Kern des API-Ablaufs:
+
+Client zu **PriceController** zu **PriceCalculationService** zu „Regionssuche” zu „Endpreis”-Antwort.
+
+
+
